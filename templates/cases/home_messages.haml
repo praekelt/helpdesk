@@ -1,0 +1,227 @@
+- extends "cases/home_base.html"
+- load smartmin i18n
+
+- block home-items
+  .{ ng-controller:"MessagesController", ng-init:"init()" }
+    .contact-toolbar{ ng-if:"activeContact" }
+      .row
+        .col-md-12
+          %span.contact-info
+            Messages for contact
+            %strong
+              [[ activeContact | limitTo:6 | uppercase ]]
+
+            - if user_is_admin
+              &nbsp;
+              %a{ ng-href:'[[ "{{ contact_ext_url }}" | replace:"{}":activeContact ]]', target:"_blank" }
+                %span.glyphicon.glyphicon-new-window
+                - trans "View"
+          .pull-away
+            %button.btn.btn-default{ type:"button", ng-click:"activateContact(null)" }
+              - trans "Back"
+
+    .search-toolbar{ ng-if:"!activeContact" }
+      .search-form-simple{ ng-if:"!advancedSearch" }
+        %form.clearfix
+          .btn-group.pull-away
+            // TODO figure out why form is double-submitted when this is moved to ng-submit on the form. jQuery conflict?
+            %button.btn.btn-default{ type:"button", ng-click:"onSearch()" }
+              %span.glyphicon.glyphicon-search
+              - trans "Search"
+            %button.btn.btn-default{ type:"button", ng-click:"setAdvancedSearch(true)" }
+              - trans "Advanced..."
+            %button.btn.btn-default{ type:"button", ng-click:"onExportSearch()", tooltip:"Save as Excel" }
+              %span.glyphicon.glyphicon-save
+
+          %span{ ng-if:'itemView != "flagged"' }
+            %input.form-control{ ng-model:"searchFields.text", type:"text", placeholder:"Search", style:"width: 400px" }
+          %span{ ng-if:'itemView == "flagged"' }
+            %input.form-control{ ng-model:"searchFields.text", type:"text", placeholder:"Search", style:"width: 300px; display: inline-block" }
+            %input{ type:"checkbox", ng-model:"searchFields.archived" }
+            - trans "include archived"
+
+      .search-form-advanced{ ng-if:"advancedSearch" }
+        %form.form-horizontal
+          .btn-group.pull-away
+            // TODO figure out why form is double-submitted when this is moved to ng-submit on the form. jQuery conflict?
+            %button.btn.btn-default{ type:"button", ng-click:"onSearch()" }
+              %span.glyphicon.glyphicon-search
+              - trans "Search"
+            %button.btn.btn-default{ type:"button", ng-click:"onResetSearch()" }
+              - trans "Clear"
+            %button.btn.btn-default{ type:"button", ng-click:"onExportSearch()", tooltip:"Save as Excel" }
+              %span.glyphicon.glyphicon-save
+
+          .form-group
+            %label.control-label.col-sm-2
+              - trans "Containing"
+            .col-sm-6
+              %input.form-control{ ng-model:"searchFields.text", type:"text", placeholder:"Search text", style:"width: 250px" }
+
+          .form-group
+            %label.control-label.col-sm-2
+              - trans "When"
+            .col-sm-10
+              %span.date-range{ ng-controller:"DateRangeController" }
+                .input-group.date-picker
+                  %input.form-control{ type:"text", datepicker-popup:"[[ format ]]", ng-model:"searchFields.after", is-open:"afterOpen", min-date:"afterMin", max-date:"afterMax", ng-change:"onAfterChange()" }
+                  %span.input-group-btn
+                    %button.btn.btn-default{ type:"button", ng-click:"openAfter($event)" }
+                      %i.glyphicon.glyphicon-calendar
+                %label.control-label
+                  - trans "Until"
+                .input-group.date-picker
+                  %input.form-control{ type:"text", datepicker-popup:"[[ format ]]", ng-model:"searchFields.before", is-open:"beforeOpen", min-date:"beforeMin", max-date:"beforeMax", ng-change:"onBeforeChange()" }
+                  %span.input-group-btn
+                    %button.btn.btn-default{ type:"button", ng-click:"openBefore($event)" }
+                      %i.glyphicon.glyphicon-calendar
+          .form-group
+            %label.control-label.col-sm-2
+              - trans "Groups"
+            .col-sm-10
+              // HAML doesn't seem to like dashes in tag names...
+              <ui-select multiple ng-model="searchFields.groups" theme="bootstrap" class="group-select">
+                <ui-select-match placeholder="Select groups">[[ $item.name ]]</ui-select-match>
+                <ui-select-choices repeat="group in groups">
+                  [[ group.name ]]
+                </ui-select-choices>
+              </ui-select>
+          .form-group{ ng-if:'itemView == "flagged"' }
+            %label.control-label.col-sm-2
+              - trans "Include archived"
+            .col-sm-10{ style:"padding-top: 4px" }
+              %input{ type:"checkbox", ng-model:"searchFields.archived" }
+
+    .selection-toolbar
+      .row
+        .col-md-12
+          .selection-controls.pull-back
+            .btn-group{ dropdown:"true" }
+              %button.btn.btn-default.dropdown-toggle{ type:"button", dropdown-toggle:"true" }
+                - trans "Select"
+                %span.caret
+              %ul.dropdown-menu
+                %li
+                  %a{ ng-click:"onSelectAll()" }
+                    - trans "All"
+                %li
+                  %a{ ng-click:"onSelectNone()" }
+                    - trans "None"
+
+          %span.selection-info{ ng-show:"selection.length > 0" }
+            <ng-pluralize count="selection.length" when="{'one': '1 message selected', 'other': '{} messages selected'}" />
+
+          .selection-actions.pull-away
+            .btn-group{ ng-if:'itemView != "archived"' }
+              .btn-group{ dropdown:"true" }
+                %button.btn.btn-default.dropdown-toggle{ type:"button", dropdown-toggle:"true", ng-disabled:"selection.length == 0", tooltip:"Label" }
+                  %span.glyphicon.glyphicon-tag
+                  %span.caret
+                %ul.dropdown-menu
+                  %li{ ng-repeat:"label in inactiveLabels" }
+                    %a{ ng-click:"onLabelSelection(label)" }
+                      [[ label.name ]]
+              %button.btn.btn-default{ ng-disabled:"selection.length == 0", ng-if:'itemView != "flagged"', ng-click:"onFlagSelection()", type:"button", tooltip:"Flag" }
+                %span.glyphicon.glyphicon-flag
+              %button.btn.btn-default{ ng-disabled:"selection.length == 0", ng-click:"onReplyToSelection()", type:"button" }
+                - trans "Reply"
+              %button.btn.btn-default{ ng-disabled:"selection.length == 0", ng-click:"onArchiveSelection()", type:"button" }
+                - trans "Archive"
+            .btn-group{ ng-if:'itemView == "archived"' }
+              %button.btn.btn-default{ ng-disabled:"selection.length == 0", ng-click:"onRestoreSelection()", type:"button" }
+                - trans "Restore"
+
+    .messages{ infinite-scroll:"loadOldItems(false)", infinite-scroll-disabled:"!isInfiniteScrollEnabled()" }
+      .stackitem.clearfix.hoverable{ ng-repeat:"message in items | filter: getItemFilter()", ng-class:"{ flagged: message.flagged, selected: message.selected, archived: message.archived }" }
+        .message-actions
+          %input{ type:"checkbox", ng-model:"message.selected", ng-change:"onChangeSelection()" }
+          %a.flag{ ng-click:"onToggleMessageFlag(message)" }
+            %span.glyphicon.glyphicon-flag
+        .message-time
+          [[ message.time | autodate ]]
+        .message-contact
+          %a{ ng-click:"activateContact(message.contact)", title:"View all from contact" }><
+            %span.glyphicon.glyphicon-phone>
+            [[ message.contact | limitTo:6 | uppercase ]]
+        .message-text{ ng-click:"onExpandMessage(message)" }
+          %span.label-container{ ng-repeat:"label in filterDisplayLabels(message.labels)" }
+            %span.label.label-success
+              [[ label.name ]]
+            &nbsp;
+          [[ message.text ]]
+        .message-extra{ collapse:"expandedMessageId != message.id" }
+          .btn-group.pull-away
+            %button.btn.btn-default{ type:"button", ng-click:"onCaseFromMessage(message)", ng-if:"partners.length > 0" }
+              - trans "Open Case"
+            %button.btn.btn-default{ type:"button", ng-click:"onForwardMessage(message)" }
+              %span.glyphicon.glyphicon-share-alt
+              - trans "Forward"
+            %button.btn.btn-default{ type:"button", ng-click:"onLabelMessage(message)" }
+              %span.glyphicon.glyphicon-tag
+            %button.btn.btn-default{ type:"button", ng-click:"onShowMessageHistory(message)" }
+              %span.glyphicon.glyphicon-time
+
+      .loading{ ng-if:"oldItemsLoading" }
+      .none{ ng-hide:"oldItemsLoading || items.length > 0" }
+        - trans "No messages"
+      .none{ ng-hide:"oldItemsLoading || !hasTooManyItemsToDisplay()" }
+        - trans "Search returned more items than can be displayed"
+
+
+- block extra-style
+  {{ block.super }}
+  :css
+    .search-toolbar .search-form-advanced .form-group {
+      margin-bottom: 5px;
+    }
+    .search-toolbar .search-form-advanced .form-group:last-of-type {
+      margin-bottom: 0;
+    }
+    .search-toolbar .date-range .input-group, .date-range label {
+      float: left;
+    }
+    .search-toolbar .date-range label {
+      padding: 5px 1em 0 1em;
+    }
+    .search-toolbar .group-select {
+      width: 500px;
+    }
+
+    .message-actions {
+      float: left;
+      width: 50px;
+    }
+    .message-contact {
+      float: left;
+      width: 80px;
+    }
+    .message-actions input[type="checkbox"] {
+      width: auto;
+      margin-right: 7px;
+    }
+    .message-time, .action-time {
+      float: right;
+      font-size: 0.7em;
+      margin-left: 3px;
+      margin-bottom: 3px;
+    }
+    .message-text {
+      margin-left: 130px;
+    }
+    .message-actions .flag {
+      color: #ddd;
+      cursor: pointer;
+    }
+    .stackitem.flagged .message-actions .flag {
+      color: #444 !important;
+    }
+    .message-history {
+      max-height: 300px;
+      overflow-y: scroll;
+    }
+    .stackitem.selected {
+      background-color: #FFFFE0
+    }
+    .stackitem.archived .message-text {
+      color: #999;
+    }

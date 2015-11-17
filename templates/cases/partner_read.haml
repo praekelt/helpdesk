@@ -1,0 +1,101 @@
+- extends "smartmin/read.html"
+- load smartmin i18n thumbnail
+
+- block pre-content
+
+- block content
+
+  - include 'modals.haml'
+
+  %script{ type:"text/javascript" }
+    var contextData = {{ context_data_json|safe }};
+
+  .ng-cloak{ ng-controller:"PartnerController", ng-cloak:"" }
+    .page-header.clearfix
+      .clearfix
+        .page-header-buttons
+          - if can_manage
+            %a.btn.btn-default{ href:"{% url 'profiles.user_create_in' object.pk %}" }
+              - trans "New User"
+            .btn-group
+              %a.btn.btn-default{ href:"{% url 'cases.partner_update' object.pk %}", tooltip:"Edit Partner" }
+                %span.glyphicon.glyphicon-pencil
+              - if org_perms.cases.partner_delete
+                %a.btn.btn-default{ ng-click:"onDeletePartner()", tooltip:"Delete" }
+                  %span.glyphicon.glyphicon-trash
+
+        - if object.logo
+          .partner-logo.pull-back
+            {% thumbnail object.logo "200x80" format="PNG" as im %}
+            %img.logo{ src:"{{ im.url }}", alt:"{{ partner.name }}"}
+            {% endthumbnail %}
+        - else
+          %h2
+            {{ object.name }}
+
+      %ul.header-details
+        - if object.logo
+          %li
+            %strong><
+              - trans "Name"
+            :
+            {{ object.name }}
+        %li
+          %strong><
+            - trans "Labels"
+          :
+          - if partner.get_labels
+            - for label in partner.get_labels
+              %span.label-container
+                %span.label.label-success
+                  {{ label.name }}
+                &nbsp;
+          - else
+            %i
+              - trans "None"
+
+    .row
+      .col-md-6
+        .partner-user-section
+          %h3
+            - trans "Managers"
+          - for user in managers
+            .partner-user.stackitem.hoverable{ ng-click:"onClickUser({{ user.pk }})" }
+              .partner-user-name
+                %span.glyphicon.glyphicon-user
+                {{ user.profile.full_name }}
+              .partner-user-email
+                {{ user.email }}
+          - if not managers
+            .none
+              - trans "None"
+      .col-md-6
+        .partner-user-section
+          %h3
+            - trans "Data Analysts"
+          - for user in analysts
+            .partner-user.stackitem.hoverable{ ng-click:"onClickUser({{ user.pk }})" }
+              .partner-user-name
+                %span.glyphicon.glyphicon-user
+                {{ user.profile.full_name }}
+              .partner-user-email
+                {{ user.email }}
+          - if not analysts
+            .none
+              - trans "None"
+
+- block extra-style
+  {{ block.super }}
+  :css
+    .partner-logo {
+      padding: 15px 20px 0 0
+    }
+    .partner-user, .partner-label {
+      margin-left: 1em
+    }
+    .partner-user-name, .partner-label {
+      font-size: 1.2em;
+    }
+    .partner-user .glyphicon, .label-name .glyphicon {
+      padding-right: 6px;
+    }

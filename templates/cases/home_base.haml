@@ -1,0 +1,137 @@
+- extends "smartmin/read.html"
+- load smartmin i18n utils
+
+- block pre-content
+
+  - if banner_text
+    .well.well-sm.banner
+      %span.glyphicon.glyphicon-info-sign
+      .banner-text
+        {{ banner_text }}
+
+- block content
+
+  - include 'modals.haml'
+
+  %script{ type:"text/javascript" }
+    var contextData = {{ context_data_json|safe }};
+
+  .ng-cloak{ ng-controller:"HomeController", ng-init:'init("{{ item_view }}")', ng-cloak:"" }
+    .page-header.clearfix
+      %h2.pull-back
+        %span{ class:'glyphicon {{ folder_icon }}' }
+        &nbsp;
+        {{ title }}
+
+      .page-header-buttons{ ng-if:"activeLabel" }
+        .label-name
+          %span.glyphicon.glyphicon-tag
+          &nbsp;
+          [[ activeLabel.name ]]
+        - if org_perms.cases.label_update or org_perms.cases.label_delete
+          .btn-group
+            - if org_perms.cases.label_update
+              %a.btn.btn-default{ ng-href:"/label/update/[[ activeLabel.id ]]/", tooltip:"Edit Label" }
+                %span.glyphicon.glyphicon-pencil
+            - if org_perms.cases.label_delete
+              %button.btn.btn-default{ ng-click:"onDeleteLabel()", tooltip:"Delete Label" }
+                %span.glyphicon.glyphicon-trash
+
+    .row
+      .col-md-2
+        .home-menu
+          %h3
+            %span.glyphicon.glyphicon-envelope
+            - trans "Messages"
+
+          %ul.nav.nav-pills.nav-stacked
+            %li{ class:"{% if_url 'cases.inbox' 'active' '' %}" }
+              %a{ href:"{% url 'cases.inbox' %}" }
+                - trans "Inbox"
+              %ul.label-menu{ ng-if:"labels.length > 0" }
+                %li.label-link{ ng-repeat:"label in labels" }
+                  %a{ ng-href:"/#?label=[[ label.name ]]", ng-class:'{ strong: label == activeLabel }' }
+                    %span.glyphicon.glyphicon-tag{ style:"font-size: 0.75em" }
+                    [[ label.name ]]
+            %li{ class:"{% if_url 'cases.flagged' 'active' '' %}" }
+              %a{ href:"{% url 'cases.flagged' %}" }
+                - trans "Flagged"
+            %li{ class:"{% if_url 'cases.archived' 'active' '' %}" }
+              %a{ href:"{% url 'cases.archived' %}" }
+                - trans "Archived"
+            - if org_perms.cases.label_unlabelled
+              %li{ class:"{% if_url 'cases.unlabelled' 'active' '' %}" }
+                %a{ href:"{% url 'cases.unlabelled' %}" }
+                  - trans "Unlabelled"
+
+          %h3
+            %span.glyphicon.glyphicon-briefcase
+            - trans "Cases"
+
+          %ul.nav.nav-pills.nav-stacked
+            %li{ class:"{% if_url 'cases.open' 'active' '' %}" }
+              %a{ href:"{% url 'cases.open' %}" }
+                - trans "Open"
+                ({{ open_case_count }})
+            %li{ class:"{% if_url 'cases.closed' 'active' '' %}" }
+              %a{ href:"{% url 'cases.closed' %}" }
+                - trans "Closed"
+                ({{ closed_case_count }})
+
+      .col-md-10{ ng-view:"" }
+        - block home-items
+
+
+- block extra-style
+  {{ block.super }}
+  :css
+    .banner {
+      margin-bottom: 0;
+    }
+    .banner .glyphicon {
+      color: #999;
+      float: left;
+      font-size: 20px;
+    }
+    .banner .banner-text {
+      margin-left: 32px;
+    }
+    .home-menu > ul {
+      margin: 0 0 1em 0;
+    }
+    .home-menu > ul > li > a {
+      padding: 7px 12px;
+    }
+    .home-menu h3 {
+      margin: 0 0 1em 0;
+      font-size: 1.2em;
+    }
+    .home-menu h3 .glyphicon {
+      margin-right: 0.3em;
+    }
+    .home-menu ul.label-menu {
+      margin: 0;
+      padding: 6px 0 6px 18px;
+      list-style: none;
+    }
+    .home-menu ul.label-menu a {
+      display: inline-block;
+    }
+    .label-name {
+      font-size: 20px;
+      display: inline-block;
+      padding: 3px 12px 3px 0;
+    }
+    .search-toolbar, .contact-toolbar {
+      padding: 4px;
+      background-color: #f7f7f7;
+    }
+    .selection-toolbar {
+      padding: 4px;
+      background-color: #F4E4F5;
+      border-top: 1px solid #ddd;
+    }
+    .selection-info, .contact-info {
+      display: inline-block;
+      padding: 7px 0 0 7px;
+    }

@@ -1,0 +1,32 @@
+from __future__ import unicode_literals
+
+# import our default settings
+from settings_common import *
+
+INSTALLED_APPS = INSTALLED_APPS + ('django_nose',)
+
+# INSTALLED_APPS = INSTALLED_APPS + ('debug_toolbar.apps.DebugToolbarConfig',)
+# MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
+
+DEBUG = True
+TEMPLATE_DEBUG = DEBUG
+
+HOSTNAME = 'localhost:8000'
+
+SITE_API_HOST = 'http://localhost:8001/api/v1'
+
+UNLABELLED_LIMIT_DAYS = 40
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'casepro',
+        'USER': 'casepro',
+        'PASSWORD': 'nyaruka',
+        'HOST': 'localhost',
+        'PORT': '',
+        'ATOMIC_REQUESTS': True,
+        'OPTIONS': {
+        }
+    }
+}

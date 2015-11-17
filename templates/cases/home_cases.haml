@@ -1,0 +1,58 @@
+- extends "cases/home_base.html"
+- load smartmin i18n
+
+- block home-items
+  .{ ng-controller:"CasesController", ng-init:"init()" }
+
+    .search-toolbar{ ng-show:"!activeContact" }
+      .row
+        .col-md-12
+          %form.form-inline
+            %label
+              - trans "Assigned to"
+            %select.form-control.assignee-select{ ng-model:"searchFields.assignee", ng-options:"p.name for p in partners track by p.id" }
+              %option{ value:"" }
+                - trans "Anyone"
+            .pull-away
+              %button.btn.btn-default{ type:"button", ng-click:"onSearch()" }
+                %span.glyphicon.glyphicon-search
+                - trans "Search"
+
+    .cases{ infinite-scroll:"loadOldItems(false)", infinite-scroll-disabled:"!isInfiniteScrollEnabled()" }
+      .stackitem.clearfix.hoverable{ ng-repeat:"item in items | filter: getItemFilter()", ng-click:"onClickCase(item)" }
+        .case-time
+          [[ item.opened_on | autodate ]]
+        .case-assignee
+          [[ item.assignee.name ]]
+        .case-text
+          %span.label-container{ ng-repeat:"label in filterDisplayLabels(item.labels)" }
+            %span.label.label-success
+              [[ label.name ]]
+            &nbsp;
+          [[ item.summary ]]
+      .loading{ ng-if:"oldItemsLoading" }
+      .none{ ng-hide:"oldItemsLoading || items.length > 0" }
+        - trans "No cases"
+      .none{ ng-hide:"oldItemsLoading || !hasTooManyItemsToDisplay()" }
+        - trans "Search returned more items than can be displayed"
+
+- block extra-style
+  {{ block.super }}
+  :css
+    .search-toolbar .assignee-select {
+      width: 250px;
+    }
+    .case-time {
+      float: right;
+      font-size: 0.7em;
+      margin-left: 3px;
+      margin-bottom: 3px;
+    }
+    .case-assignee {
+      float: left;
+      width: 200px;
+    }
+    .case-text {
+      margin-left: 200px;
+    }
+
